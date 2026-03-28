@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Dimensions, FlatList } from 'react-native';
 import { getPieceUnicode } from '../utils/chessLogic';
 
 const { width } = Dimensions.get('window');
@@ -15,49 +15,66 @@ export function ChessBoard({ board, selectedSquare, onSquarePress }) {
     return selectedSquare && selectedSquare.row === row && selectedSquare.col === col;
   };
 
-  return (
-    <View style={styles.board}>
-      {board.map((row, rowIndex) =>
-        row.map((piece, colIndex) => {
-          const isLight = (rowIndex + colIndex) % 2 === 0;
-          const isSelected = isSquareSelected(rowIndex, colIndex);
+  // 將棋盤展平為一維陣列以供 FlatList 使用
+  const flattenedBoard = [];
+  board.forEach((row, rowIndex) => {
+    row.forEach((piece, colIndex) => {
+      flattenedBoard.push({
+        id: `${rowIndex}-${colIndex}`,
+        rowIndex,
+        colIndex,
+        piece,
+      });
+    });
+  });
 
-          return (
-            <TouchableOpacity
-              key={`${rowIndex}-${colIndex}`}
-              style={[
-                styles.square,
-                isLight ? styles.lightSquare : styles.darkSquare,
-                isSelected && styles.selectedSquare,
-              ]}
-              onPress={() => onSquarePress(rowIndex, colIndex)}
-            >
-              <Text style={styles.piece}>{renderPiece(piece)}</Text>
-            </TouchableOpacity>
-          );
-        })
-      )}
+  const renderSquare = ({ item }) => {
+    const { rowIndex, colIndex, piece } = item;
+    const isLight = (rowIndex + colIndex) % 2 === 0;
+    const isSelected = isSquareSelected(rowIndex, colIndex);
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.square,
+          { width: SQUARE_SIZE, height: SQUARE_SIZE },
+          isLight ? styles.lightSquare : styles.darkSquare,
+          isSelected && styles.selectedSquare,
+        ]}
+        onPress={() => onSquarePress(rowIndex, colIndex)}
+      >
+        <Text style={styles.piece}>{renderPiece(piece)}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={flattenedBoard}
+        renderItem={renderSquare}
+        keyExtractor={item => item.id}
+        numColumns={8}
+        scrollEnabled={false}
+        style={[styles.board, { width: BOARD_SIZE, height: BOARD_SIZE }]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   board: {
-    width: BOARD_SIZE,
-    height: BOARD_SIZE,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#333',
     backgroundColor: '#8B7355',
   },
   square: {
-    width: SQUARE_SIZE,
-    height: SQUARE_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 0.5,
-    borderColor: '#666',
   },
   lightSquare: {
     backgroundColor: '#F0D9B5',
@@ -67,7 +84,7 @@ const styles = StyleSheet.create({
   },
   selectedSquare: {
     backgroundColor: '#BACA44',
-    opacity: 0.8,
+    opacity: 0.85,
   },
   piece: {
     fontSize: 32,

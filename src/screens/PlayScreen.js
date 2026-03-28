@@ -69,14 +69,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     backgroundColor: '#f5f5f5',
     paddingTop: 20,
+    paddingBottom: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 15,
     color: '#333',
   },
   languageButton: {
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   turnInfo: {
-    marginBottom: 15,
+    marginBottom: 12,
     paddingHorizontal: 20,
   },
   turnText: {
@@ -107,7 +108,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 20,
-    marginBottom: 20,
   },
   buttonText: {
     color: 'white',
