@@ -1,8 +1,8 @@
-import { View, StyleSheet, TouchableOpacity, Text, Dimensions, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
 import { getPieceUnicode } from '../utils/chessLogic';
 
-const { width } = Dimensions.get('window');
-const BOARD_SIZE = Math.min(width - 40, 400);
+const { width, height } = Dimensions.get('window');
+const BOARD_SIZE = Math.min(width - 40, Math.floor(height * 0.6));
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
 export function ChessBoard({ board, selectedSquare, onSquarePress }) {
@@ -15,72 +15,51 @@ export function ChessBoard({ board, selectedSquare, onSquarePress }) {
     return selectedSquare && selectedSquare.row === row && selectedSquare.col === col;
   };
 
-  // 將棋盤展平為一維陣列以供 FlatList 使用
-  const flattenedBoard = [];
-  board.forEach((row, rowIndex) => {
-    row.forEach((piece, colIndex) => {
-      flattenedBoard.push({
-        id: `${rowIndex}-${colIndex}`,
-        rowIndex,
-        colIndex,
-        piece,
-      });
-    });
-  });
-
-  const renderSquare = ({ item }) => {
-    const { rowIndex, colIndex, piece } = item;
-    const isLight = (rowIndex + colIndex) % 2 === 0;
-    const isSelected = isSquareSelected(rowIndex, colIndex);
-
-    return (
-      <TouchableOpacity
-        style={[
-          styles.square,
-          { width: SQUARE_SIZE, height: SQUARE_SIZE },
-          isLight ? styles.lightSquare : styles.darkSquare,
-          isSelected && styles.selectedSquare,
-        ]}
-        onPress={() => onSquarePress(rowIndex, colIndex)}
-      >
-        <Text style={styles.piece}>{renderPiece(piece)}</Text>
-      </TouchableOpacity>
-    );
-  };
-
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={flattenedBoard}
-        renderItem={renderSquare}
-        keyExtractor={item => item.id}
-        numColumns={8}
-        scrollEnabled={false}
-        style={[styles.board, { width: BOARD_SIZE, height: BOARD_SIZE }]}
-      />
+    <View style={[styles.board, { width: BOARD_SIZE, height: BOARD_SIZE }]}> 
+      {board.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.row}>
+          {row.map((piece, colIndex) => {
+            const isLight = (rowIndex + colIndex) % 2 === 0;
+            const isSelected = isSquareSelected(rowIndex, colIndex);
+
+            return (
+              <TouchableOpacity
+                key={`${rowIndex}-${colIndex}`}
+                style={[
+                  styles.square,
+                  { width: SQUARE_SIZE, height: SQUARE_SIZE },
+                  isLight ? styles.lightSquare : styles.darkSquare,
+                  isSelected && styles.selectedSquare,
+                ]}
+                onPress={() => onSquarePress(rowIndex, colIndex)}
+              >
+                <Text style={styles.piece}>{renderPiece(piece)}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   board: {
-    borderWidth: 3,
-    borderColor: '#333',
-    backgroundColor: '#8B7355',
+    backgroundColor: '#2a2a2a',
+  },
+  row: {
+    flexDirection: 'row',
   },
   square: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   lightSquare: {
-    backgroundColor: '#F0D9B5',
+    backgroundColor: '#f0f0f0',
   },
   darkSquare: {
-    backgroundColor: '#B58863',
+    backgroundColor: '#b0b0b0',
   },
   selectedSquare: {
     backgroundColor: '#BACA44',
