@@ -34,8 +34,6 @@ export function PlayScreen() {
     if (result.success) {
       setGameState(result.newGameState);
       setSelectedSquare(null);
-    } else {
-      setSelectedSquare(null);
     }
   };
 
