@@ -1,0 +1,16 @@
+{
+  "app": {
+    "title": "國際象棋",
+    "newGame": "新遊戲"
+  },
+  "game": {
+    "currentPlayer": "當前玩家",
+    "whitePiece": "白棋",
+    "blackPiece": "黑棋",
+    "invalidMove": "這不是一個合法的移動",
+    "notYourTurn": "不是該棋子的行棋時間"
+  },
+  "common": {
+    "language": "繁體中文"
+  }
+}

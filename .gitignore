@@ -1,0 +1,47 @@
+# React Native / Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+
+# React Native
+android/
+ios/
+.gradle/
+build/
+*.jks
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Babel
+.babelrc
+babel.config.js
+
+# Misc
+.watchmanconfig
+.buckconfig

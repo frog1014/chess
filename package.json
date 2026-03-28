@@ -1,0 +1,27 @@
+{
+  "name": "chess-rn",
+  "version": "0.0.1",
+  "description": "A cross-platform chess game built with React Native",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "jest"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-native": "^0.72.0",
+    "expo": "~49.0.0",
+    "expo-status-bar": "~1.6.0",
+    "i18next": "^23.7.0",
+    "react-i18next": "^14.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "@babel/preset-env": "^7.22.0",
+    "babel-jest": "^29.0.0"
+  },
+  "author": "Chess Developer",
+  "license": "MIT"
+}

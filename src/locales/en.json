@@ -1,0 +1,16 @@
+{
+  "app": {
+    "title": "Chess",
+    "newGame": "New Game"
+  },
+  "game": {
+    "currentPlayer": "Current player",
+    "whitePiece": "White",
+    "blackPiece": "Black",
+    "invalidMove": "This is not a valid move",
+    "notYourTurn": "It's not this piece's turn"
+  },
+  "common": {
+    "language": "English"
+  }
+}
