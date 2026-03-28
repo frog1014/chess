@@ -2,7 +2,12 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChessBoard, type SelectedSquare } from '../components/ChessBoard';
-import { initializeChessGame, makeMove, type GameState } from '../utils/chessLogic';
+import {
+  getNoMovesReason,
+  initializeChessGame,
+  makeMove,
+  type GameState,
+} from '../utils/chessLogic';
 
 export function PlayScreen() {
   const { t, i18n } = useTranslation();
@@ -49,6 +54,7 @@ export function PlayScreen() {
 
   const toggleTutorialMode = () => {
     setTutorialMode((v) => !v);
+    setSelectedSquare(null);
   };
 
   const playerName = gameState.currentTurn === 'white' ? t('game.whitePiece') : t('game.blackPiece');
@@ -60,6 +66,11 @@ export function PlayScreen() {
     const colorLabel = piece.color === 'white' ? t('game.whitePiece') : t('game.blackPiece');
     const typeLabel = t(`game.pieces.${piece.type}`);
     return `${colorLabel} ${typeLabel}`;
+  })();
+
+  const noMovesReason = (() => {
+    if (!selectedSquare) return null;
+    return getNoMovesReason(gameState.board, selectedSquare.row, selectedSquare.col);
   })();
 
   return (
@@ -86,11 +97,24 @@ export function PlayScreen() {
         <Text style={styles.turnText}>
           {t('game.currentPlayer')}: {playerName}
         </Text>
-        {selectedPieceDescription ? (
-          <Text style={styles.selectedPieceText} accessibilityLiveRegion="polite">
-            {t('game.selectedPiece')}: {selectedPieceDescription}
-          </Text>
-        ) : null}
+        <View style={styles.metaSlot}>
+          {selectedPieceDescription ? (
+            <Text style={styles.selectedPieceText} accessibilityLiveRegion="polite">
+              {t('game.selectedPiece')}: {selectedPieceDescription}
+            </Text>
+          ) : null}
+          {tutorialMode && noMovesReason && selectedSquare ? (
+            <Text
+              key={`hint-${noMovesReason}-${selectedSquare.row}-${selectedSquare.col}`}
+              style={styles.noMovesHint}
+              accessibilityLiveRegion="polite"
+            >
+              <Text style={styles.noMovesTitle}>{t('game.noMoves.title')}</Text>
+              {'\n'}
+              {t(`game.noMoves.${noMovesReason}`)}
+            </Text>
+          ) : null}
+        </View>
       </View>
       <ChessBoard
         board={gameState.board}
@@ -109,7 +133,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     backgroundColor: '#f2f2f2',
     paddingTop: 20,
     paddingBottom: 20,
@@ -162,17 +186,37 @@ const styles = StyleSheet.create({
   turnInfo: {
     marginBottom: 12,
     paddingHorizontal: 20,
+    width: '100%',
+    alignItems: 'center',
   },
   turnText: {
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
+  },
+  metaSlot: {
+    marginTop: 6,
+    minHeight: 96,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   selectedPieceText: {
     fontSize: 16,
     color: '#333',
     fontWeight: '600',
-    marginTop: 6,
     textAlign: 'center',
+  },
+  noMovesHint: {
+    fontSize: 14,
+    color: '#b71c1c',
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 8,
+  },
+  noMovesTitle: {
+    fontWeight: '700',
   },
   newGameButton: {
     backgroundColor: '#4CAF50',

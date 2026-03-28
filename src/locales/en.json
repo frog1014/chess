@@ -18,6 +18,13 @@
       "bishop": "Bishop",
       "queen": "Queen",
       "king": "King"
+    },
+    "noMoves": {
+      "title": "No legal moves",
+      "pawn": "The square straight ahead is blocked and there are no enemy pieces to capture diagonally.",
+      "knight": "Every L-shaped landing square is off the board or occupied by a friendly piece.",
+      "king": "All neighboring squares are blocked by a friendly piece or the edge of the board.",
+      "slider": "Every direction along a rank, file, or diagonal is blocked, with no empty square to enter or enemy to capture."
     }
   },
   "common": {

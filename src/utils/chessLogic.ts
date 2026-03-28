@@ -146,6 +146,27 @@ export function getLegalMovesFromSquare(board: Board, row: number, col: number):
   return getLegalMoves(board, row, col);
 }
 
+/** i18n 鍵後綴：`game.noMoves.${reason}`，僅在該格棋子在當前盤面上沒有任何可走法時有意義。 */
+export type NoMovesReason = 'pawn' | 'knight' | 'king' | 'slider';
+
+export function getNoMovesReason(board: Board, row: number, col: number): NoMovesReason | null {
+  const piece = board[row][col];
+  if (!piece || getLegalMoves(board, row, col).length > 0) return null;
+
+  switch (piece.type) {
+    case PIECE_TYPES.PAWN:
+      return 'pawn';
+    case PIECE_TYPES.KNIGHT:
+      return 'knight';
+    case PIECE_TYPES.KING:
+      return 'king';
+    case PIECE_TYPES.ROOK:
+    case PIECE_TYPES.BISHOP:
+    case PIECE_TYPES.QUEEN:
+      return 'slider';
+  }
+}
+
 // 兵的移動
 function getPawnMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
   const moves: MoveCoord[] = [];
