@@ -1,14 +1,24 @@
 {
   "app": {
     "title": "Chess",
-    "newGame": "New Game"
+    "newGame": "New Game",
+    "tutorial": "Tutorial"
   },
   "game": {
     "currentPlayer": "Current player",
     "whitePiece": "White",
     "blackPiece": "Black",
+    "selectedPiece": "Selected",
     "invalidMove": "This is not a valid move",
-    "notYourTurn": "It's not this piece's turn"
+    "notYourTurn": "It's not this piece's turn",
+    "pieces": {
+      "pawn": "Pawn",
+      "rook": "Rook",
+      "knight": "Knight",
+      "bishop": "Bishop",
+      "queen": "Queen",
+      "king": "King"
+    }
   },
   "common": {
     "language": "English"

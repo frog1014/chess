@@ -141,6 +141,11 @@ function getLegalMoves(board: Board, row: number, col: number): MoveCoord[] {
   return moves;
 }
 
+/** 教學／提示：該格若有棋子，回傳目前盤勢下的所有合法走格（與 makeMove 使用的規則相同）。 */
+export function getLegalMovesFromSquare(board: Board, row: number, col: number): MoveCoord[] {
+  return getLegalMoves(board, row, col);
+}
+
 // 兵的移動
 function getPawnMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
   const moves: MoveCoord[] = [];

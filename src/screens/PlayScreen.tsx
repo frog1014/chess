@@ -8,21 +8,34 @@ export function PlayScreen() {
   const { t, i18n } = useTranslation();
   const [gameState, setGameState] = useState<GameState>(() => initializeChessGame());
   const [selectedSquare, setSelectedSquare] = useState<SelectedSquare | null>(null);
+  const [tutorialMode, setTutorialMode] = useState(false);
 
   const handleSquarePress = (row: number, col: number) => {
+    const pieceAtTarget = gameState.board[row][col];
+
     if (selectedSquare === null) {
-      const piece = gameState.board[row][col];
-      if (piece && piece.color === gameState.currentTurn) {
+      if (pieceAtTarget && pieceAtTarget.color === gameState.currentTurn) {
         setSelectedSquare({ row, col });
       }
+      return;
+    }
+
+    if (selectedSquare.row === row && selectedSquare.col === col) {
+      setSelectedSquare(null);
+      return;
+    }
+
+    if (pieceAtTarget && pieceAtTarget.color === gameState.currentTurn) {
+      setSelectedSquare({ row, col });
+      return;
+    }
+
+    const result = makeMove(gameState, selectedSquare.row, selectedSquare.col, row, col);
+    if (result.success) {
+      setGameState(result.newGameState);
+      setSelectedSquare(null);
     } else {
-      const result = makeMove(gameState, selectedSquare.row, selectedSquare.col, row, col);
-      if (result.success) {
-        setGameState(result.newGameState);
-        setSelectedSquare(null);
-      } else {
-        setSelectedSquare(null);
-      }
+      setSelectedSquare(null);
     }
   };
 
@@ -36,24 +49,55 @@ export function PlayScreen() {
     i18n.changeLanguage(newLang);
   };
 
+  const toggleTutorialMode = () => {
+    setTutorialMode((v) => !v);
+  };
+
   const playerName = gameState.currentTurn === 'white' ? t('game.whitePiece') : t('game.blackPiece');
+
+  const selectedPieceDescription = (() => {
+    if (!selectedSquare) return null;
+    const piece = gameState.board[selectedSquare.row][selectedSquare.col];
+    if (!piece) return null;
+    const colorLabel = piece.color === 'white' ? t('game.whitePiece') : t('game.blackPiece');
+    const typeLabel = t(`game.pieces.${piece.type}`);
+    return `${colorLabel} ${typeLabel}`;
+  })();
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('app.title')}</Text>
-      <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
-        <Text style={styles.languageButtonText}>
-          {i18n.language === 'zh-TW' ? 'EN' : '中文'}
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.topRightBar}>
+        <TouchableOpacity
+          style={[styles.tutorialButton, tutorialMode && styles.tutorialButtonOn]}
+          onPress={toggleTutorialMode}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: tutorialMode }}
+        >
+          <Text style={[styles.tutorialButtonText, tutorialMode && styles.tutorialButtonTextOn]}>
+            {t('app.tutorial')}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
+          <Text style={styles.languageButtonText}>
+            {i18n.language === 'zh-TW' ? 'EN' : '中文'}
+          </Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.turnInfo}>
         <Text style={styles.turnText}>
           {t('game.currentPlayer')}: {playerName}
         </Text>
+        {selectedPieceDescription ? (
+          <Text style={styles.selectedPieceText} accessibilityLiveRegion="polite">
+            {t('game.selectedPiece')}: {selectedPieceDescription}
+          </Text>
+        ) : null}
       </View>
       <ChessBoard
         board={gameState.board}
         selectedSquare={selectedSquare}
+        tutorialMode={tutorialMode}
         onSquarePress={handleSquarePress}
       />
       <TouchableOpacity style={styles.newGameButton} onPress={handleNewGame}>
@@ -78,10 +122,35 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: '#333',
   },
-  languageButton: {
+  topRightBar: {
     position: 'absolute',
     top: 20,
     right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tutorialButton: {
+    backgroundColor: '#e0e0e0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#bdbdbd',
+  },
+  tutorialButtonOn: {
+    backgroundColor: '#FF9800',
+    borderColor: '#F57C00',
+  },
+  tutorialButtonText: {
+    color: '#424242',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  tutorialButtonTextOn: {
+    color: 'white',
+  },
+  languageButton: {
     backgroundColor: '#2196F3',
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -99,6 +168,13 @@ const styles = StyleSheet.create({
   turnText: {
     fontSize: 16,
     color: '#666',
+  },
+  selectedPieceText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '600',
+    marginTop: 6,
+    textAlign: 'center',
   },
   newGameButton: {
     backgroundColor: '#4CAF50',
