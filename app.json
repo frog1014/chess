@@ -12,9 +12,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTabletMode": true
-    },
     "android": {
       "package": "com.frog1014.chess"
     }
