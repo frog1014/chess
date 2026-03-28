@@ -1,33 +1,33 @@
 import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
-import { getPieceUnicode, Piece } from '../utils/chessLogic';
+import { getPieceUnicode, type Board, type BoardSquare } from '../utils/chessLogic';
 
 const { width, height } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(width - 40, Math.floor(height * 0.6));
 const SQUARE_SIZE = BOARD_SIZE / 8;
 
-export interface SquarePosition {
+export interface SelectedSquare {
   row: number;
   col: number;
 }
 
 interface ChessBoardProps {
-  board: (Piece | null)[][];
-  selectedSquare: SquarePosition | null;
+  board: Board;
+  selectedSquare: SelectedSquare | null;
   onSquarePress: (row: number, col: number) => void;
 }
 
 export function ChessBoard({ board, selectedSquare, onSquarePress }: ChessBoardProps) {
-  const renderPiece = (piece: Piece | null) => {
+  const renderPiece = (piece: BoardSquare) => {
     if (!piece) return '';
     return getPieceUnicode(piece.type, piece.color);
   };
 
-  const isSquareSelected = (row: number, col: number): boolean => {
-    return selectedSquare?.row === row && selectedSquare?.col === col;
+  const isSquareSelected = (row: number, col: number) => {
+    return selectedSquare && selectedSquare.row === row && selectedSquare.col === col;
   };
 
   return (
-    <View style={[styles.board, { width: BOARD_SIZE, height: BOARD_SIZE }]}> 
+    <View style={[styles.board, { width: BOARD_SIZE, height: BOARD_SIZE }]}>
       {board.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
           {row.map((piece, colIndex) => {

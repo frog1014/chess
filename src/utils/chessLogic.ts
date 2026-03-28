@@ -1,16 +1,4 @@
-export type PieceType = 'pawn' | 'rook' | 'knight' | 'bishop' | 'queen' | 'king';
-
-export interface Piece {
-  type: PieceType;
-  color: 'white' | 'black';
-}
-
-export interface GameState {
-  board: (Piece | null)[][];
-  currentTurn: 'white' | 'black';
-  moveHistory: Array<{ from: [number, number]; to: [number, number] }>;
-}
-
+// 棋子類型
 export const PIECE_TYPES = {
   PAWN: 'pawn',
   ROOK: 'rook',
@@ -20,13 +8,41 @@ export const PIECE_TYPES = {
   KING: 'king',
 } as const;
 
+// 棋子顏色
 export const COLORS = {
   WHITE: 'white',
   BLACK: 'black',
 } as const;
 
-export function getPieceUnicode(type: PieceType, color: 'white' | 'black') {
-  const pieces = {
+export type PieceType = (typeof PIECE_TYPES)[keyof typeof PIECE_TYPES];
+export type PieceColor = (typeof COLORS)[keyof typeof COLORS];
+
+export interface Piece {
+  type: PieceType;
+  color: PieceColor;
+}
+
+export type BoardSquare = Piece | null;
+export type Board = BoardSquare[][];
+
+export interface GameState {
+  board: Board;
+  currentTurn: PieceColor;
+  moveHistory: Array<{ from: [number, number]; to: [number, number] }>;
+}
+
+interface MoveCoord {
+  row: number;
+  col: number;
+}
+
+export type MoveResult =
+  | { success: true; newGameState: GameState }
+  | { success: false; error: string };
+
+// 獲取棋子的 Unicode 符號
+export function getPieceUnicode(type: PieceType, color: PieceColor): string {
+  const pieces: Record<PieceColor, Record<PieceType, string>> = {
     white: {
       pawn: '♙',
       rook: '♖',
@@ -45,42 +61,47 @@ export function getPieceUnicode(type: PieceType, color: 'white' | 'black') {
     },
   };
 
-  return pieces[color][type] || '';
+  return pieces[color][type] ?? '';
 }
 
-function initializeBoard(): (Piece | null)[][] {
-  const board: (Piece | null)[][] = Array.from({ length: 8 }, () => Array(8).fill(null));
+// 初始化棋盤
+function initializeBoard(): Board {
+  const board: Board = Array(8)
+    .fill(null)
+    .map(() => Array<BoardSquare>(8).fill(null));
 
-  // black pieces
-  board[0] = [
-    { type: PIECE_TYPES.ROOK, color: COLORS.BLACK },
-    { type: PIECE_TYPES.KNIGHT, color: COLORS.BLACK },
-    { type: PIECE_TYPES.BISHOP, color: COLORS.BLACK },
-    { type: PIECE_TYPES.QUEEN, color: COLORS.BLACK },
-    { type: PIECE_TYPES.KING, color: COLORS.BLACK },
-    { type: PIECE_TYPES.BISHOP, color: COLORS.BLACK },
-    { type: PIECE_TYPES.KNIGHT, color: COLORS.BLACK },
-    { type: PIECE_TYPES.ROOK, color: COLORS.BLACK },
-  ];
+  // 設置黑棋
+  board[0][0] = { type: PIECE_TYPES.ROOK, color: COLORS.BLACK };
+  board[0][1] = { type: PIECE_TYPES.KNIGHT, color: COLORS.BLACK };
+  board[0][2] = { type: PIECE_TYPES.BISHOP, color: COLORS.BLACK };
+  board[0][3] = { type: PIECE_TYPES.QUEEN, color: COLORS.BLACK };
+  board[0][4] = { type: PIECE_TYPES.KING, color: COLORS.BLACK };
+  board[0][5] = { type: PIECE_TYPES.BISHOP, color: COLORS.BLACK };
+  board[0][6] = { type: PIECE_TYPES.KNIGHT, color: COLORS.BLACK };
+  board[0][7] = { type: PIECE_TYPES.ROOK, color: COLORS.BLACK };
 
-  board[1] = Array.from({ length: 8 }, () => ({ type: PIECE_TYPES.PAWN, color: COLORS.BLACK }));
+  for (let col = 0; col < 8; col++) {
+    board[1][col] = { type: PIECE_TYPES.PAWN, color: COLORS.BLACK };
+  }
 
-  board[6] = Array.from({ length: 8 }, () => ({ type: PIECE_TYPES.PAWN, color: COLORS.WHITE }));
+  // 設置白棋
+  for (let col = 0; col < 8; col++) {
+    board[6][col] = { type: PIECE_TYPES.PAWN, color: COLORS.WHITE };
+  }
 
-  board[7] = [
-    { type: PIECE_TYPES.ROOK, color: COLORS.WHITE },
-    { type: PIECE_TYPES.KNIGHT, color: COLORS.WHITE },
-    { type: PIECE_TYPES.BISHOP, color: COLORS.WHITE },
-    { type: PIECE_TYPES.QUEEN, color: COLORS.WHITE },
-    { type: PIECE_TYPES.KING, color: COLORS.WHITE },
-    { type: PIECE_TYPES.BISHOP, color: COLORS.WHITE },
-    { type: PIECE_TYPES.KNIGHT, color: COLORS.WHITE },
-    { type: PIECE_TYPES.ROOK, color: COLORS.WHITE },
-  ];
+  board[7][0] = { type: PIECE_TYPES.ROOK, color: COLORS.WHITE };
+  board[7][1] = { type: PIECE_TYPES.KNIGHT, color: COLORS.WHITE };
+  board[7][2] = { type: PIECE_TYPES.BISHOP, color: COLORS.WHITE };
+  board[7][3] = { type: PIECE_TYPES.QUEEN, color: COLORS.WHITE };
+  board[7][4] = { type: PIECE_TYPES.KING, color: COLORS.WHITE };
+  board[7][5] = { type: PIECE_TYPES.BISHOP, color: COLORS.WHITE };
+  board[7][6] = { type: PIECE_TYPES.KNIGHT, color: COLORS.WHITE };
+  board[7][7] = { type: PIECE_TYPES.ROOK, color: COLORS.WHITE };
 
   return board;
 }
 
+// 初始化遊戲狀態
 export function initializeChessGame(): GameState {
   return {
     board: initializeBoard(),
@@ -89,26 +110,57 @@ export function initializeChessGame(): GameState {
   };
 }
 
-function inBounds(row: number, col: number) {
-  return row >= 0 && row < 8 && col >= 0 && col < 8;
+// 獲取合法的移動
+function getLegalMoves(board: Board, row: number, col: number): MoveCoord[] {
+  const piece = board[row][col];
+  if (!piece) return [];
+
+  const moves: MoveCoord[] = [];
+
+  switch (piece.type) {
+    case PIECE_TYPES.PAWN:
+      moves.push(...getPawnMoves(board, row, col, piece.color));
+      break;
+    case PIECE_TYPES.ROOK:
+      moves.push(...getRookMoves(board, row, col, piece.color));
+      break;
+    case PIECE_TYPES.KNIGHT:
+      moves.push(...getKnightMoves(board, row, col, piece.color));
+      break;
+    case PIECE_TYPES.BISHOP:
+      moves.push(...getBishopMoves(board, row, col, piece.color));
+      break;
+    case PIECE_TYPES.QUEEN:
+      moves.push(...getQueenMoves(board, row, col, piece.color));
+      break;
+    case PIECE_TYPES.KING:
+      moves.push(...getKingMoves(board, row, col, piece.color));
+      break;
+  }
+
+  return moves;
 }
 
-function getPawnMoves(board: (Piece | null)[][], row: number, col: number, color: 'white' | 'black') {
-  const moves: Array<{ row: number; col: number }> = [];
+// 兵的移動
+function getPawnMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
+  const moves: MoveCoord[] = [];
   const direction = color === COLORS.WHITE ? -1 : 1;
   const startRow = color === COLORS.WHITE ? 6 : 1;
-  const nextRow = row + direction;
 
-  if (inBounds(nextRow, col) && !board[nextRow][col]) {
+  // 向前一步
+  const nextRow = row + direction;
+  if (nextRow >= 0 && nextRow < 8 && !board[nextRow][col]) {
     moves.push({ row: nextRow, col });
+
+    // 從起始位置可以向前兩步
     if (row === startRow && !board[row + 2 * direction][col]) {
       moves.push({ row: row + 2 * direction, col });
     }
   }
 
-  for (const deltaCol of [-1, 1]) {
-    const newCol = col + deltaCol;
-    if (inBounds(nextRow, newCol)) {
+  // 吃子（對角線）
+  for (const newCol of [col - 1, col + 1]) {
+    if (nextRow >= 0 && nextRow < 8 && newCol >= 0 && newCol < 8) {
       const targetPiece = board[nextRow][newCol];
       if (targetPiece && targetPiece.color !== color) {
         moves.push({ row: nextRow, col: newCol });
@@ -119,127 +171,140 @@ function getPawnMoves(board: (Piece | null)[][], row: number, col: number, color
   return moves;
 }
 
-function getRookMoves(board: (Piece | null)[][], row: number, col: number, color: 'white' | 'black') {
-  const moves: Array<{ row: number; col: number }> = [];
-  const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-
-  directions.forEach(([dr, dc]) => {
-    for (let i = 1; i < 8; i++) {
-      const newRow = row + dr * i;
-      const newCol = col + dc * i;
-      if (!inBounds(newRow, newCol)) break;
-      const targetPiece = board[newRow][newCol];
-      if (!targetPiece) {
-        moves.push({ row: newRow, col: newCol });
-      } else {
-        if (targetPiece.color !== color) moves.push({ row: newRow, col: newCol });
-        break;
-      }
-    }
-  });
-
-  return moves;
-}
-
-function getKnightMoves(board: (Piece | null)[][], row: number, col: number, color: 'white' | 'black') {
-  const moves: Array<{ row: number; col: number }> = [];
-  const offsets = [
-    [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-    [1, -2], [1, 2], [2, -1], [2, 1],
+// 車的移動
+function getRookMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
+  const moves: MoveCoord[] = [];
+  const directions: [number, number][] = [
+    [0, 1],
+    [0, -1],
+    [1, 0],
+    [-1, 0],
   ];
 
-  offsets.forEach(([dr, dc]) => {
-    const newRow = row + dr;
-    const newCol = col + dc;
-    if (!inBounds(newRow, newCol)) return;
-    const targetPiece = board[newRow][newCol];
-    if (!targetPiece || targetPiece.color !== color) {
-      moves.push({ row: newRow, col: newCol });
-    }
-  });
-
-  return moves;
-}
-
-function getBishopMoves(board: (Piece | null)[][], row: number, col: number, color: 'white' | 'black') {
-  const moves: Array<{ row: number; col: number }> = [];
-  const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-
-  directions.forEach(([dr, dc]) => {
+  for (const [dr, dc] of directions) {
     for (let i = 1; i < 8; i++) {
       const newRow = row + dr * i;
       const newCol = col + dc * i;
-      if (!inBounds(newRow, newCol)) break;
+
+      if (newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
+
       const targetPiece = board[newRow][newCol];
       if (!targetPiece) {
         moves.push({ row: newRow, col: newCol });
       } else {
-        if (targetPiece.color !== color) moves.push({ row: newRow, col: newCol });
+        if (targetPiece.color !== color) {
+          moves.push({ row: newRow, col: newCol });
+        }
         break;
       }
     }
-  });
+  }
 
   return moves;
 }
 
-function getQueenMoves(board: (Piece | null)[][], row: number, col: number, color: 'white' | 'black') {
+// 馬的移動
+function getKnightMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
+  const moves: MoveCoord[] = [];
+  const offsets: [number, number][] = [
+    [-2, -1],
+    [-2, 1],
+    [-1, -2],
+    [-1, 2],
+    [1, -2],
+    [1, 2],
+    [2, -1],
+    [2, 1],
+  ];
+
+  for (const [dr, dc] of offsets) {
+    const newRow = row + dr;
+    const newCol = col + dc;
+
+    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+      const targetPiece = board[newRow][newCol];
+      if (!targetPiece || targetPiece.color !== color) {
+        moves.push({ row: newRow, col: newCol });
+      }
+    }
+  }
+
+  return moves;
+}
+
+// 象的移動
+function getBishopMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
+  const moves: MoveCoord[] = [];
+  const directions: [number, number][] = [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ];
+
+  for (const [dr, dc] of directions) {
+    for (let i = 1; i < 8; i++) {
+      const newRow = row + dr * i;
+      const newCol = col + dc * i;
+
+      if (newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
+
+      const targetPiece = board[newRow][newCol];
+      if (!targetPiece) {
+        moves.push({ row: newRow, col: newCol });
+      } else {
+        if (targetPiece.color !== color) {
+          moves.push({ row: newRow, col: newCol });
+        }
+        break;
+      }
+    }
+  }
+
+  return moves;
+}
+
+// 后的移動
+function getQueenMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
   return [...getRookMoves(board, row, col, color), ...getBishopMoves(board, row, col, color)];
 }
 
-function getKingMoves(board: (Piece | null)[][], row: number, col: number, color: 'white' | 'black') {
-  const moves: Array<{ row: number; col: number }> = [];
-  const offsets = [
-    [-1, -1], [-1, 0], [-1, 1],
-    [0, -1], [0, 1],
-    [1, -1], [1, 0], [1, 1],
+// 王的移動
+function getKingMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
+  const moves: MoveCoord[] = [];
+  const offsets: [number, number][] = [
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+    [0, -1],
+    [0, 1],
+    [1, -1],
+    [1, 0],
+    [1, 1],
   ];
 
-  offsets.forEach(([dr, dc]) => {
+  for (const [dr, dc] of offsets) {
     const newRow = row + dr;
     const newCol = col + dc;
-    if (!inBounds(newRow, newCol)) return;
-    const targetPiece = board[newRow][newCol];
-    if (!targetPiece || targetPiece.color !== color) {
-      moves.push({ row: newRow, col: newCol });
+
+    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+      const targetPiece = board[newRow][newCol];
+      if (!targetPiece || targetPiece.color !== color) {
+        moves.push({ row: newRow, col: newCol });
+      }
     }
-  });
+  }
 
   return moves;
 }
 
-function getLegalMoves(board: (Piece | null)[][], row: number, col: number) {
-  const piece = board[row][col];
-  if (!piece) return [];
-
-  switch (piece.type) {
-    case PIECE_TYPES.PAWN:
-      return getPawnMoves(board, row, col, piece.color);
-    case PIECE_TYPES.ROOK:
-      return getRookMoves(board, row, col, piece.color);
-    case PIECE_TYPES.KNIGHT:
-      return getKnightMoves(board, row, col, piece.color);
-    case PIECE_TYPES.BISHOP:
-      return getBishopMoves(board, row, col, piece.color);
-    case PIECE_TYPES.QUEEN:
-      return getQueenMoves(board, row, col, piece.color);
-    case PIECE_TYPES.KING:
-      return getKingMoves(board, row, col, piece.color);
-    default:
-      return [];
-  }
-}
-
-export type MoveResult =
-  | { success: true; newGameState: GameState }
-  | { success: false; error: string };
-
+// 執行移動
 export function makeMove(
   gameState: GameState,
   fromRow: number,
   fromCol: number,
   toRow: number,
-  toCol: number
+  toCol: number,
 ): MoveResult {
   const piece = gameState.board[fromRow][fromCol];
 
@@ -254,10 +319,12 @@ export function makeMove(
     return { success: false, error: '這不是一個合法的移動' };
   }
 
-  const newBoard = gameState.board.map((row) => row.slice());
+  // 建立新的棋盤
+  const newBoard: Board = gameState.board.map((r) => [...r]);
   newBoard[toRow][toCol] = piece;
   newBoard[fromRow][fromCol] = null;
 
+  // 切換當前玩家
   const newTurn = gameState.currentTurn === COLORS.WHITE ? COLORS.BLACK : COLORS.WHITE;
 
   return {
