@@ -1,5 +1,10 @@
 import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
-import { getPieceUnicode, type Board, type BoardSquare } from '../utils/chessLogic';
+import {
+  getLegalMovesFromSquare,
+  getPieceUnicode,
+  type Board,
+  type BoardSquare,
+} from '../utils/chessLogic';
 
 const { width, height } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(width - 40, Math.floor(height * 0.6));
@@ -13,10 +18,11 @@ export interface SelectedSquare {
 interface ChessBoardProps {
   board: Board;
   selectedSquare: SelectedSquare | null;
+  tutorialMode: boolean;
   onSquarePress: (row: number, col: number) => void;
 }
 
-export function ChessBoard({ board, selectedSquare, onSquarePress }: ChessBoardProps) {
+export function ChessBoard({ board, selectedSquare, tutorialMode, onSquarePress }: ChessBoardProps) {
   const renderPiece = (piece: BoardSquare) => {
     if (!piece) return '';
     return getPieceUnicode(piece.type, piece.color);
@@ -26,6 +32,14 @@ export function ChessBoard({ board, selectedSquare, onSquarePress }: ChessBoardP
     return selectedSquare && selectedSquare.row === row && selectedSquare.col === col;
   };
 
+  const legalTargets =
+    tutorialMode && selectedSquare
+      ? getLegalMovesFromSquare(board, selectedSquare.row, selectedSquare.col)
+      : [];
+
+  const isLegalTarget = (row: number, col: number) =>
+    legalTargets.some((m) => m.row === row && m.col === col);
+
   return (
     <View style={[styles.board, { width: BOARD_SIZE, height: BOARD_SIZE }]}>
       {board.map((row, rowIndex) => (
@@ -33,6 +47,7 @@ export function ChessBoard({ board, selectedSquare, onSquarePress }: ChessBoardP
           {row.map((piece, colIndex) => {
             const isLight = (rowIndex + colIndex) % 2 === 0;
             const isSelected = isSquareSelected(rowIndex, colIndex);
+            const showLegal = isLegalTarget(rowIndex, colIndex);
 
             return (
               <TouchableOpacity
@@ -41,6 +56,7 @@ export function ChessBoard({ board, selectedSquare, onSquarePress }: ChessBoardP
                   styles.square,
                   { width: SQUARE_SIZE, height: SQUARE_SIZE },
                   isLight ? styles.lightSquare : styles.darkSquare,
+                  showLegal && styles.legalMoveSquare,
                   isSelected && styles.selectedSquare,
                 ]}
                 onPress={() => onSquarePress(rowIndex, colIndex)}
@@ -71,6 +87,9 @@ const styles = StyleSheet.create({
   },
   darkSquare: {
     backgroundColor: '#b0b0b0',
+  },
+  legalMoveSquare: {
+    backgroundColor: 'rgba(76, 175, 80, 0.45)',
   },
   selectedSquare: {
     backgroundColor: '#BACA44',
