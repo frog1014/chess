@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { ChessBoard, type SelectedSquare } from '../components/ChessBoard';
 import {
@@ -93,7 +94,7 @@ export function PlayScreen() {
       : null;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right', 'bottom']}>
       <TouchableOpacity style={styles.newGameTopLeft} onPress={handleNewGame}>
         <Text style={styles.newGameTopLeftText}>{t('app.newGame')}</Text>
       </TouchableOpacity>
@@ -190,7 +191,7 @@ export function PlayScreen() {
           onSquarePress={handleSquarePress}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingTop: 8,
-    paddingBottom: 20,
+    paddingBottom: 8,
     backgroundColor: '#f2f2f2',
   },
   pieceTutorialBlock: {
