@@ -167,6 +167,89 @@ export function getNoMovesReason(board: Board, row: number, col: number): NoMove
   }
 }
 
+/** 教學用：兵在當前格時，可走型態依「是否在起始列／前方是否淨空」而變，供 UI 顯示情境句。 */
+export type PawnTutorialSituation =
+  | 'start_double_available'
+  | 'start_single_only'
+  | 'start_forward_blocked'
+  | 'advanced';
+
+export function getPawnTutorialSituation(
+  board: Board,
+  row: number,
+  col: number,
+): PawnTutorialSituation | null {
+  const piece = board[row][col];
+  if (!piece || piece.type !== PIECE_TYPES.PAWN) return null;
+
+  const color = piece.color;
+  const direction = color === COLORS.WHITE ? -1 : 1;
+  const startRow = color === COLORS.WHITE ? 6 : 1;
+  const nextRow = row + direction;
+  const onStart = row === startRow;
+
+  if (!onStart) {
+    return 'advanced';
+  }
+
+  const forwardInBoard = nextRow >= 0 && nextRow < 8;
+  const forwardBlocked = !forwardInBoard || !!board[nextRow][col];
+
+  if (forwardBlocked) {
+    return 'start_forward_blocked';
+  }
+
+  const twoRow = row + 2 * direction;
+  const twoAheadInBoard = twoRow >= 0 && twoRow < 8;
+  const twoAheadClear = twoAheadInBoard && !board[twoRow][col];
+
+  if (twoAheadClear) {
+    return 'start_double_available';
+  }
+  return 'start_single_only';
+}
+
+/** 棋格落在邊、角或內側：車、馬、王可走／可跳的「有效方向」會隨位置改變。 */
+export type BoardZone = 'corner' | 'edge' | 'inner';
+
+export function getBoardZone(row: number, col: number): BoardZone {
+  const isCorner = (row === 0 || row === 7) && (col === 0 || col === 7);
+  if (isCorner) return 'corner';
+  const isEdge = row === 0 || row === 7 || col === 0 || col === 7;
+  if (isEdge) return 'edge';
+  return 'inner';
+}
+
+export type QueenTutorialSituation = 'mixed' | 'orthogonal_only' | 'diagonal_only';
+
+/** 教學用：后在當前格若有可走法，依「本步實際能走的直橫 vs 斜線」分類（阻擋會改變路線型態）。 */
+export function getQueenTutorialSituation(
+  board: Board,
+  row: number,
+  col: number,
+): QueenTutorialSituation | null {
+  const piece = board[row][col];
+  if (!piece || piece.type !== PIECE_TYPES.QUEEN) return null;
+  const moves = getLegalMoves(board, row, col);
+  if (moves.length === 0) return null;
+
+  let hasOrtho = false;
+  let hasDiag = false;
+  for (const m of moves) {
+    const dr = m.row - row;
+    const dc = m.col - col;
+    if (dr === 0 || dc === 0) {
+      hasOrtho = true;
+    } else if (Math.abs(dr) === Math.abs(dc)) {
+      hasDiag = true;
+    }
+  }
+
+  if (hasOrtho && hasDiag) return 'mixed';
+  if (hasOrtho) return 'orthogonal_only';
+  return 'diagonal_only';
+}
+
 // 兵的移動
 function getPawnMoves(board: Board, row: number, col: number, color: PieceColor): MoveCoord[] {
   const moves: MoveCoord[] = [];

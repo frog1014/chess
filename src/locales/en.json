@@ -21,10 +21,44 @@
     },
     "noMoves": {
       "title": "No legal moves",
-      "pawn": "The square straight ahead is blocked and there are no enemy pieces to capture diagonally.",
+      "pawn": "The square straight ahead is blocked and there are no enemy pieces to capture diagonally. (Pawns never capture straight; from the starting rank a two-step leap needs both squares ahead empty.)",
       "knight": "Every L-shaped landing square is off the board or occupied by a friendly piece.",
       "king": "All neighboring squares are blocked by a friendly piece or the edge of the board.",
       "slider": "Every direction along a rank, file, or diagonal is blocked, with no empty square to enter or enemy to capture."
+    },
+    "tutorial": {
+      "pawnRules": "Pawns only move straight forward: one square at a time, or two from the starting rank when both squares ahead are empty. They capture only on the forward diagonals—never straight ahead.",
+      "pawnSituation": {
+        "start_double_available": "Still on the starting rank with a clear two-square path—you may move one or two squares forward.",
+        "start_single_only": "Still on the starting rank, but the second square ahead is occupied—you can advance only one square forward (captures on diagonals still apply).",
+        "start_forward_blocked": "The square straight ahead is blocked—you cannot step forward until it clears; diagonal captures still work if an enemy is there.",
+        "advanced": "Already past the starting rank—you may move only one square forward (or capture diagonally)."
+      },
+      "rookRules": "Rooks slide along ranks and files until blocked. They capture by landing on the first enemy in a direction.",
+      "rookSituation": {
+        "corner": "In a corner, this rook can extend along at most two directions along the board.",
+        "edge": "On the edge, at most three directions stay on the board until blocked.",
+        "inner": "Away from the edge, all four directions may be used along straight lines until a piece stops the ray."
+      },
+      "knightRules": "Knights move in an L-shape and may jump over pieces. The landing square must be empty or hold an enemy to capture—not a friendly piece.",
+      "knightSituation": {
+        "corner": "Near a corner, several L-shape landings fall off the board, so fewer jumps are normally legal.",
+        "edge": "On the edge, some knight moves leave the board and cannot be used.",
+        "inner": "In the center, more full knight moves are usually possible; friendly pieces on landing squares still block."
+      },
+      "bishopRules": "Bishops slide diagonally until blocked. They always stay on the same square color they started from.",
+      "queenRules": "The queen combines rook and bishop: any distance along a rank, file, or diagonal until blocked, capturing the first enemy in that line.",
+      "queenSituation": {
+        "mixed": "From here it can still use both straight and diagonal lines in at least one legal direction.",
+        "orthogonal_only": "Right now all its legal destinations lie on ranks or files only—diagonal rays are blocked before any legal landing.",
+        "diagonal_only": "Right now every legal destination is on a diagonal—straight ranks/files are blocked before any legal landing."
+      },
+      "kingRules": "The king steps one square in any direction to an empty square or to capture an enemy. (This app does not yet enforce check or castling.)",
+      "kingSituation": {
+        "corner": "In a corner, fewer neighboring squares exist on the board.",
+        "edge": "On the edge, fewer adjacent squares are on the board than in the center.",
+        "inner": "In the center, up to eight neighbors can be considered if empty or capturable."
+      }
     }
   },
   "common": {

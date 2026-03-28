@@ -3,7 +3,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChessBoard, type SelectedSquare } from '../components/ChessBoard';
 import {
+  getBoardZone,
   getNoMovesReason,
+  getPawnTutorialSituation,
+  getQueenTutorialSituation,
   initializeChessGame,
   makeMove,
   type GameState,
@@ -73,6 +76,22 @@ export function PlayScreen() {
     return getNoMovesReason(gameState.board, selectedSquare.row, selectedSquare.col);
   })();
 
+  const selectedPiece =
+    selectedSquare != null ? gameState.board[selectedSquare.row][selectedSquare.col] : null;
+
+  const tutorialBoardZone =
+    tutorialMode && selectedSquare ? getBoardZone(selectedSquare.row, selectedSquare.col) : null;
+
+  const pawnTutorialSituation =
+    tutorialMode && selectedPiece?.type === 'pawn' && selectedSquare
+      ? getPawnTutorialSituation(gameState.board, selectedSquare.row, selectedSquare.col)
+      : null;
+
+  const queenTutorialSituation =
+    tutorialMode && selectedPiece?.type === 'queen' && selectedSquare
+      ? getQueenTutorialSituation(gameState.board, selectedSquare.row, selectedSquare.col)
+      : null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('app.title')}</Text>
@@ -102,6 +121,41 @@ export function PlayScreen() {
             <Text style={styles.selectedPieceText} accessibilityLiveRegion="polite">
               {t('game.selectedPiece')}: {selectedPieceDescription}
             </Text>
+          ) : null}
+          {tutorialMode && selectedSquare && selectedPiece ? (
+            <View
+              key={`tut-${selectedPiece.type}-${selectedSquare.row}-${selectedSquare.col}-${tutorialBoardZone ?? ''}-${queenTutorialSituation ?? ''}-${pawnTutorialSituation ?? ''}`}
+              style={styles.pieceTutorialBlock}
+            >
+              <Text style={styles.pieceTutorialRules}>
+                {t(`game.tutorial.${selectedPiece.type}Rules`)}
+              </Text>
+              {pawnTutorialSituation ? (
+                <Text style={styles.pieceTutorialSituation}>
+                  {t(`game.tutorial.pawnSituation.${pawnTutorialSituation}`)}
+                </Text>
+              ) : null}
+              {queenTutorialSituation ? (
+                <Text style={styles.pieceTutorialSituation}>
+                  {t(`game.tutorial.queenSituation.${queenTutorialSituation}`)}
+                </Text>
+              ) : null}
+              {selectedPiece.type === 'rook' && tutorialBoardZone ? (
+                <Text style={styles.pieceTutorialSituation}>
+                  {t(`game.tutorial.rookSituation.${tutorialBoardZone}`)}
+                </Text>
+              ) : null}
+              {selectedPiece.type === 'knight' && tutorialBoardZone ? (
+                <Text style={styles.pieceTutorialSituation}>
+                  {t(`game.tutorial.knightSituation.${tutorialBoardZone}`)}
+                </Text>
+              ) : null}
+              {selectedPiece.type === 'king' && tutorialBoardZone ? (
+                <Text style={styles.pieceTutorialSituation}>
+                  {t(`game.tutorial.kingSituation.${tutorialBoardZone}`)}
+                </Text>
+              ) : null}
+            </View>
           ) : null}
           {tutorialMode && noMovesReason && selectedSquare ? (
             <Text
@@ -196,10 +250,29 @@ const styles = StyleSheet.create({
   },
   metaSlot: {
     marginTop: 6,
-    minHeight: 96,
+    minHeight: 120,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'flex-start',
+  },
+  pieceTutorialBlock: {
+    marginTop: 8,
+    width: '100%',
+    paddingHorizontal: 8,
+  },
+  pieceTutorialRules: {
+    fontSize: 13,
+    color: '#1565C0',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  pieceTutorialSituation: {
+    fontSize: 13,
+    color: '#0D47A1',
+    fontWeight: '600',
+    lineHeight: 20,
+    marginTop: 6,
+    textAlign: 'center',
   },
   selectedPieceText: {
     fontSize: 16,
