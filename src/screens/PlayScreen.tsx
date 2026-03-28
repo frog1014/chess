@@ -1,13 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChessBoard } from '../components/ChessBoard';
-import { initializeChessGame, makeMove, GameState } from '../utils/chessLogic';
+import { ChessBoard, type SelectedSquare } from '../components/ChessBoard';
+import { initializeChessGame, makeMove, type GameState } from '../utils/chessLogic';
 
 export function PlayScreen() {
   const { t, i18n } = useTranslation();
-  const [gameState, setGameState] = useState<GameState>(initializeChessGame());
-  const [selectedSquare, setSelectedSquare] = useState<{ row: number; col: number } | null>(null);
+  const [gameState, setGameState] = useState<GameState>(() => initializeChessGame());
+  const [selectedSquare, setSelectedSquare] = useState<SelectedSquare | null>(null);
 
   const handleSquarePress = (row: number, col: number) => {
     if (selectedSquare === null) {
@@ -21,7 +21,6 @@ export function PlayScreen() {
         setGameState(result.newGameState);
         setSelectedSquare(null);
       } else {
-        console.warn(result.error);
         setSelectedSquare(null);
       }
     }
@@ -47,8 +46,16 @@ export function PlayScreen() {
           {i18n.language === 'zh-TW' ? 'EN' : '中文'}
         </Text>
       </TouchableOpacity>
-      <Text style={styles.turnText}>{t('game.currentPlayer')}: {playerName}</Text>
-      <ChessBoard board={gameState.board} selectedSquare={selectedSquare} onSquarePress={handleSquarePress} />
+      <View style={styles.turnInfo}>
+        <Text style={styles.turnText}>
+          {t('game.currentPlayer')}: {playerName}
+        </Text>
+      </View>
+      <ChessBoard
+        board={gameState.board}
+        selectedSquare={selectedSquare}
+        onSquarePress={handleSquarePress}
+      />
       <TouchableOpacity style={styles.newGameButton} onPress={handleNewGame}>
         <Text style={styles.buttonText}>{t('app.newGame')}</Text>
       </TouchableOpacity>
@@ -85,9 +92,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  turnText: {
+  turnInfo: {
     marginBottom: 12,
     paddingHorizontal: 20,
+  },
+  turnText: {
     fontSize: 16,
     color: '#666',
   },

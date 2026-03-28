@@ -3,9 +3,7 @@
     "target": "ES2020",
     "module": "ESNext",
     "jsx": "react-native",
-    "moduleResolution": "node",
-    "allowJs": true,
-    "checkJs": false,
+    "allowJs": false,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -19,8 +17,7 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    "**/*.js"
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules",
