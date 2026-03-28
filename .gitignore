@@ -45,3 +45,4 @@ babel.config.js
 # Misc
 .watchmanconfig
 .buckconfig
+key.7z
