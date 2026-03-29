@@ -1,19 +1,29 @@
 {
   "expo": {
-    "name": "chess-rn",
-    "slug": "chess-rn",
-    "version": "1.0.0",
+    "name": "Chess",
+    "slug": "learn and improve while they play",
+    "version": "0.2",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#f2f2f2"
+      "backgroundColor": "#0E1E37"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "android": {
       "package": "com.frog1014.chess"
-    }
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0E1E37",
+          "image": "./assets/logox128.png",
+          "imageWidth": 128
+        }
+      ]
+    ]
   }
 }

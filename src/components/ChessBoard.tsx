@@ -50,10 +50,7 @@ export function ChessBoard({ currentTurn, board, selectedSquare, tutorialMode, m
   const isLegalTarget = (row: number, col: number) =>
     legalTargets.some((m) => m.row === row && m.col === col);
 
-  const isCurrentPlayerPiece = (piece: BoardSquare) => {
-    console.log('Checking piece color:', piece?.color, 'against current turn:', currentTurn);
-    return piece?.color === currentTurn
-  };
+  const isCurrentPlayerPiece = (piece: BoardSquare) => piece?.color === currentTurn;
 
   const lastMove = moveHistory && moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
   const isLastMoveFrom = (row: number, col: number) => lastMove && lastMove.from[0] === row && lastMove.from[1] === col;
