@@ -445,3 +445,31 @@ export function makeMove(
     },
   };
 }
+
+// ✅ 貼到 chessLogic.ts 最底部
+
+const PIECE_TO_FEN: Record<PieceType, string> = {
+  pawn: 'p', rook: 'r', knight: 'n',
+  bishop: 'b', queen: 'q', king: 'k',
+};
+
+export function boardToFen(board: Board, currentTurn: PieceColor): string {
+  const rows = board.map((row) => {
+    let fenRow = '';
+    let empty = 0;
+    for (const sq of row) {
+      if (!sq) {
+        empty++;
+      } else {
+        if (empty > 0) { fenRow += empty; empty = 0; }
+        const ch = PIECE_TO_FEN[sq.type];
+        fenRow += sq.color === COLORS.WHITE ? ch.toUpperCase() : ch;
+      }
+    }
+    if (empty > 0) fenRow += empty;
+    return fenRow;
+  });
+
+  const turn = currentTurn === COLORS.WHITE ? 'w' : 'b';
+  return `${rows.join('/')} ${turn} - - 0 1`;
+}

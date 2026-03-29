@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, StatusBar, Platform, TouchableOpacity, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChessBoard, type SelectedSquare } from '../components/ChessBoard';
 import {
@@ -9,15 +9,49 @@ import {
   getQueenTutorialSituation,
   initializeChessGame,
   makeMove,
+  COLORS,
   type GameState,
 } from '../utils/chessLogic';
+import { usePvC } from '../hooks/usePvC'; // ✅ 新增
 
 export function PlayScreen() {
   const { t, i18n } = useTranslation();
   const [gameState, setGameState] = useState<GameState>(() => initializeChessGame());
   const [selectedSquare, setSelectedSquare] = useState<SelectedSquare | null>(null);
   const [tutorialMode, setTutorialMode] = useState(false);
+  const [isPvC, setIsPvC] = useState(false); // ✅ 新增
+  const applyMove = (from: [number, number], to: [number, number]) => {
+    const result = makeMove(gameState, from[0], from[1], to[0], to[1]);
+    if (result.success) {
+      setGameState(result.newGameState);
+      setSelectedSquare(null);
+    }
+  };
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // ✅ 新增：接入 AI hook（AI 固定下黑棋）
+  usePvC({
+    board: gameState.board,
+    currentTurn: gameState.currentTurn,
+    isPvC,
+    skillLevel: 10,
+    depth: 10,
+    onAIMove: applyMove,
+  });
+  // ✅ 加在其他 useState 旁邊
+
+  // ✅ 加在 usePvC 下面
+  useEffect(() => {
+    setElapsedSeconds(0); // 換手時重置
+    const interval = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [gameState.currentTurn]);
+
   const handleSquarePress = (row: number, col: number) => {
+    if (isPvC && gameState.currentTurn === COLORS.BLACK) return;
+
     const pieceAtTarget = gameState.board[row][col];
 
     if (selectedSquare === null) {
@@ -37,11 +71,8 @@ export function PlayScreen() {
       return;
     }
 
-    const result = makeMove(gameState, selectedSquare.row, selectedSquare.col, row, col);
-    if (result.success) {
-      setGameState(result.newGameState);
-      setSelectedSquare(null);
-    }
+    applyMove([selectedSquare.row, selectedSquare.col], [row, col]);
+
   };
 
   const handleNewGame = () => {
@@ -52,6 +83,12 @@ export function PlayScreen() {
   const toggleLanguage = () => {
     const newLang = i18n.language === 'zh-TW' ? 'en' : 'zh-TW';
     i18n.changeLanguage(newLang);
+  };
+
+  const togglePvC = () => {
+    setIsPvC((v) => !v);
+    setGameState(initializeChessGame());
+    setSelectedSquare(null);
   };
 
   const toggleTutorialMode = () => {
@@ -98,13 +135,21 @@ export function PlayScreen() {
       </TouchableOpacity>
       <View style={styles.topRightBar}>
         <TouchableOpacity
+          style={[styles.pvcButton, isPvC && styles.pvcButtonOn]}
+          onPress={togglePvC}
+        >
+          <Text style={[styles.tutorialButtonText, isPvC && styles.tutorialButtonTextOn]}>
+            {isPvC ? '🤖 PvC' : '👥 PvP'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={[styles.tutorialButton, tutorialMode && styles.tutorialButtonOn]}
           onPress={toggleTutorialMode}
           accessibilityRole="switch"
           accessibilityState={{ checked: tutorialMode }}
         >
           <Text style={[styles.tutorialButtonText, tutorialMode && styles.tutorialButtonTextOn]}>
-            {t('app.tutorial')}
+            {t('app.tutorial')} {tutorialMode ? 'ON' : 'OFF'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
@@ -178,6 +223,11 @@ export function PlayScreen() {
           </ScrollView>
           <Text style={styles.turnText}>
             {t('game.currentPlayer')}: {playerName}
+            {'  '}
+            <Text style={styles.timerText}>
+              {String(Math.floor(elapsedSeconds / 60)).padStart(2, '0')}:
+              {String(elapsedSeconds % 60).padStart(2, '0')}
+            </Text>
           </Text>
         </View>
       </View>
@@ -420,6 +470,35 @@ const styles = StyleSheet.create({
     borderRightColor: '#A1887F',
     // 這裡不寫邊框寬度，它會自動沿用 tutorialButton 的數值
   },
+  pvcButton: {
+    backgroundColor: '#64acff',
+    borderRadius: 10,
+    minWidth: 80,               // 鎖定寬度
+    height: 46,                 // 鎖定高度
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: 2,
+    borderTopColor: '#e6f7ff',
+    borderBottomWidth: 4,
+    borderBottomColor: '#3b7dc9',
+    borderLeftWidth: 1,
+    borderLeftColor: '#809fc3',
+    borderRightWidth: 1,
+    borderRightColor: '#809fc3',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  pvcButtonOn: {
+    backgroundColor: '#8dbef6',
+    borderTopColor: '#e6f7ff',
+    borderBottomColor: '#6094d0',
+    borderLeftColor: '#8eb1da',
+    borderRightColor: '#8eb1da',
+    // 這裡不寫邊框寬度，它會自動沿用 tutorialButton 的數值
+  },
   tutorialButtonText: {
     color: '#F0F0F0',
     fontSize: 15,
@@ -484,4 +563,11 @@ const styles = StyleSheet.create({
     shadowRadius: 12,       // 增加擴散範圍
     shadowOffset: { width: 0, height: 0 }, // 均勻向四周發光
   },
+  timerText: {
+    fontSize: 16,
+    color: '#FFD700',
+    fontVariant: ['tabular-nums'], // 數字等寬，避免跳動
+    fontWeight: '600',
+  },
+
 });
