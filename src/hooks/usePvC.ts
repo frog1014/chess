@@ -19,21 +19,25 @@ export function usePvC({
   useEffect(() => { onAIMoveRef.current = onAIMove; }, [onAIMove]);
 
   useEffect(() => {
-    console.log('[usePvC] useEffect init called'); // 確認 hook 有掛上去
-    initStockfish(skillLevel)
+    initStockfish(skillLevel);
     return () => { stopStockfish(); };
   }, []);
 
   useEffect(() => {
     if (!isPvC || currentTurn !== COLORS.BLACK) return;
 
-    const fen = boardToFen(board, currentTurn);
-    console.log('[usePvC] AI turn, FEN:', fen);
+    // ✅ 等 1 秒後才呼叫 API
+    const timer = setTimeout(() => {
+      const fen = boardToFen(board, currentTurn);
+      console.log('[usePvC] AI turn, FEN:', fen);
 
-    // ✅ requestAIMove 現在是 async
-    requestAIMove(fen, depth, (move) => {
-      console.log('[usePvC] AI move:', move);
-      onAIMoveRef.current(move.from, move.to);
-    });
+      requestAIMove(fen, depth, (move) => {
+        console.log('[usePvC] AI move received:', move);
+        onAIMoveRef.current(move.from, move.to);
+      });
+    }, 1000);
+
+    // 換手時清除，避免殘留
+    return () => clearTimeout(timer);
   }, [currentTurn, isPvC]);
 }

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, StatusBar, Platform, TouchableOpacity, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChessBoard, type SelectedSquare } from '../components/ChessBoard';
 import {
@@ -27,6 +27,8 @@ export function PlayScreen() {
       setSelectedSquare(null);
     }
   };
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
   // ✅ 新增：接入 AI hook（AI 固定下黑棋）
   usePvC({
     board: gameState.board,
@@ -36,6 +38,16 @@ export function PlayScreen() {
     depth: 10,
     onAIMove: applyMove,
   });
+  // ✅ 加在其他 useState 旁邊
+
+  // ✅ 加在 usePvC 下面
+  useEffect(() => {
+    setElapsedSeconds(0); // 換手時重置
+    const interval = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [gameState.currentTurn]);
 
   const handleSquarePress = (row: number, col: number) => {
     if (isPvC && gameState.currentTurn === COLORS.BLACK) return;
@@ -211,6 +223,11 @@ export function PlayScreen() {
           </ScrollView>
           <Text style={styles.turnText}>
             {t('game.currentPlayer')}: {playerName}
+            {'  '}
+            <Text style={styles.timerText}>
+              {String(Math.floor(elapsedSeconds / 60)).padStart(2, '0')}:
+              {String(elapsedSeconds % 60).padStart(2, '0')}
+            </Text>
           </Text>
         </View>
       </View>
@@ -546,4 +563,11 @@ const styles = StyleSheet.create({
     shadowRadius: 12,       // 增加擴散範圍
     shadowOffset: { width: 0, height: 0 }, // 均勻向四周發光
   },
+  timerText: {
+    fontSize: 16,
+    color: '#FFD700',
+    fontVariant: ['tabular-nums'], // 數字等寬，避免跳動
+    fontWeight: '600',
+  },
+
 });
