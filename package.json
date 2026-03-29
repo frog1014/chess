@@ -11,6 +11,7 @@
   },
   "dependencies": {
   "expo": "^54.0.7",
+  "expo-status-bar": "1.12.1",
   "i18next": "^23.7.0",
   "react": "19.1.0",
   "react-i18next": "^14.0.0",

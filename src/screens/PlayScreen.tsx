@@ -1,6 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { ChessBoard, type SelectedSquare } from '../components/ChessBoard';
 import {
@@ -18,7 +17,6 @@ export function PlayScreen() {
   const [gameState, setGameState] = useState<GameState>(() => initializeChessGame());
   const [selectedSquare, setSelectedSquare] = useState<SelectedSquare | null>(null);
   const [tutorialMode, setTutorialMode] = useState(false);
-
   const handleSquarePress = (row: number, col: number) => {
     const pieceAtTarget = gameState.board[row][col];
 
@@ -94,7 +92,7 @@ export function PlayScreen() {
       : null;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right', 'bottom']}>
+    <View style={[styles.container]} >
       <TouchableOpacity style={styles.newGameTopLeft} onPress={handleNewGame}>
         <Text style={styles.newGameTopLeftText}>{t('app.newGame')}</Text>
       </TouchableOpacity>
@@ -191,7 +189,7 @@ export function PlayScreen() {
           onSquarePress={handleSquarePress}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -199,6 +197,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f2f2f2',
+    paddingTop: 24
   },
   upperContent: {
     flex: 1,
