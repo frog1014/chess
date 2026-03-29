@@ -1,10 +1,13 @@
-import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react'; //
+import { Animated, View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
 import {
   getLegalMovesFromSquare,
   getPieceUnicode,
   type Board,
   type BoardSquare,
 } from '../utils/chessLogic';
+
+
 
 const { width, height } = Dimensions.get('window');
 const BOARD_SIZE = Math.min(width - 40, Math.floor(height * 0.6));
@@ -24,6 +27,9 @@ interface ChessBoardProps {
 }
 
 export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = [], onSquarePress }: ChessBoardProps) {
+  // 在你的組件內部
+  const breatheAnim = useRef(new Animated.Value(0.4)).current;
+
   const renderPiece = (piece: BoardSquare) => {
     if (!piece) return '';
     return getPieceUnicode(piece.type, piece.color);
@@ -44,7 +50,6 @@ export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = 
   const lastMove = moveHistory && moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
   const isLastMoveFrom = (row: number, col: number) => lastMove && lastMove.from[0] === row && lastMove.from[1] === col;
   const isLastMoveTo = (row: number, col: number) => lastMove && lastMove.to[0] === row && lastMove.to[1] === col;
-
   return (
     <View style={[styles.board, { width: BOARD_SIZE, height: BOARD_SIZE }]}>
       {board.map((row, rowIndex) => (
@@ -56,23 +61,62 @@ export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = 
             const isLastFrom = isLastMoveFrom(rowIndex, colIndex);
             const isLastTo = isLastMoveTo(rowIndex, colIndex);
 
+            useEffect(() => {
+              if (showLegal) {
+                // 2. 啟動循環動畫
+                Animated.loop(
+                  Animated.sequence([
+                    Animated.timing(breatheAnim, {
+                      toValue: 1,
+                      duration: 1000,
+                      useNativeDriver: false, // 因為陰影和背景色不支援 Native Driver
+                    }),
+                    Animated.timing(breatheAnim, {
+                      toValue: 0.4,
+                      duration: 1000,
+                      useNativeDriver: false,
+                    }),
+                  ])
+                ).start();
+              } else {
+                breatheAnim.setValue(0.4); // 若不是合法移動則重置
+              }
+            }, [showLegal]);
             return (
               <TouchableOpacity
                 key={`${rowIndex}-${colIndex}`}
                 style={[
                   styles.square,
                   { width: SQUARE_SIZE, height: SQUARE_SIZE },
+                  // 基礎底色
                   isLight ? styles.lightSquare : styles.darkSquare,
-                  isSelected && styles.selectedSquare,
+                  // 最後移動的底色 (會蓋在基礎底色上)
                   (isLastFrom || isLastTo) && styles.lastMoveSquare,
-                  showLegal && styles.legalMoveSquare,
+                  // 選中狀態的邊框/發光
+                  isSelected && styles.selectedSquare,
                 ]}
                 onPress={() => onSquarePress(rowIndex, colIndex)}
               >
-                <Text style={styles.piece}>{renderPiece(piece)}</Text>
-                {isLastFrom && <Text style={styles.moveNumber}>1</Text>}
-                {isLastTo && <Text style={styles.moveNumber}>2</Text>}
+                {/* 第一層：呼吸燈 - 增加 zIndex 確保不被 darkSquare 遮擋 */}
+                {showLegal && (
+                  <Animated.View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      styles.legalMoveSquare,
+                      { opacity: breatheAnim, zIndex: 1 } // 強制置頂於背景之上
+                    ]}
+                  />
+                )}
+
+                {/* 第二層：內容容器 - zIndex 更高以確保文字在最上層 */}
+                <View style={[styles.contentContainer, { zIndex: 2 }]}>
+                  <Text style={styles.piece}>{renderPiece(piece)}</Text>
+                  {(isLastFrom || isLastTo) && (
+                    <Text style={styles.moveNumber}>{isLastFrom ? '1' : '2'}</Text>
+                  )}
+                </View>
               </TouchableOpacity>
+
             );
           })}
         </View>
@@ -88,6 +132,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: 'transparent'
+  },
   square: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -99,11 +150,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#344561',
   },
   legalMoveSquare: {
-    backgroundColor: 'rgba(76, 175, 80, 0.45)',
+    backgroundColor: 'rgba(9, 198, 15, 0.45)',
+
+    // 2. 移除 borderRadius 避免黑邊問題
+    borderRadius: 0,
+
+    // 3. 使用內縮邊框 (Inset Border) 模擬發光邊緣
+    // 這樣視覺上會像圖片中格子邊緣有一層亮光，但不會破壞格子形狀
+    borderWidth: 3,
+    borderColor: 'rgba(120, 255, 120, 0.4)',
+
+    // 4. 強化發光感 (不會影響佈局)
+    elevation: 16,
+    shadowColor: '#04904a',
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+
+    // 5. 確保內部內容居中
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectedSquare: {
-    backgroundColor: '#BACA44',
-    opacity: 0.85,
+    backgroundColor: 'rgba(186, 202, 68, 0.5)', // 使用 rgba 增加通透感
+    // --- 關鍵：內發光感 ---
+    borderWidth: 2,
+    borderRadius: 8,
+    borderColor: '#BACA44',
+    // iOS 發光
+    shadowColor: '#BACA44',
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    // Android 發光
+    elevation: 15,
   },
   lastMoveSquare: {
     backgroundColor: 'rgba(237, 99, 135, 0.6)',
@@ -121,7 +200,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     bottom: 4,
     right: 4,
-    opacity: 0.8,
+    opacity: 1,
   },
   piece: {
     fontSize: 32,
