@@ -56,7 +56,7 @@ export function PlayScreen() {
 
   const toggleTutorialMode = () => {
     setTutorialMode((v) => !v);
-    setSelectedSquare(null);
+    // setSelectedSquare(null);
   };
 
   const playerName = gameState.currentTurn === 'white' ? t('game.whitePiece') : t('game.blackPiece');
@@ -121,7 +121,7 @@ export function PlayScreen() {
             {t('game.currentPlayer')}: {playerName}
           </Text>
           <ScrollView
-            style={styles.metaScroll}
+            style={[styles.metaScroll, tutorialMode && styles.instructionPanel]}
             contentContainerStyle={styles.metaScrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator
@@ -343,6 +343,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#b71c1c',
     marginTop: 8,
+    marginBottom: 8,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 8,
@@ -460,5 +461,24 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+
+  instructionPanel: {
+    width: '100%',
+    borderRadius: 12,
+    padding: 8,
+
+    // --- 關鍵：多層發光效果 ---
+    borderWidth: 1.8,
+    borderColor: 'rgba(255, 255, 255, 0.6)', // 亮淺藍邊框 (霓虹核心)
+
+    // 1. Android 的發光靠 elevation (但效果有限)
+    elevation: 100,
+
+    // 2. iOS 的強效發光 (陰影設為淡藍色)
+    shadowColor: '#87CEFA', // 天藍色發光
+    shadowOpacity: 0.8,     // 提高不透明度
+    shadowRadius: 12,       // 增加擴散範圍
+    shadowOffset: { width: 0, height: 0 }, // 均勻向四周發光
   },
 });
