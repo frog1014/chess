@@ -9,15 +9,37 @@ import {
   getQueenTutorialSituation,
   initializeChessGame,
   makeMove,
+  COLORS,
   type GameState,
 } from '../utils/chessLogic';
+import { usePvC } from '../hooks/usePvC'; // ✅ 新增
 
 export function PlayScreen() {
   const { t, i18n } = useTranslation();
   const [gameState, setGameState] = useState<GameState>(() => initializeChessGame());
   const [selectedSquare, setSelectedSquare] = useState<SelectedSquare | null>(null);
   const [tutorialMode, setTutorialMode] = useState(false);
+  const [isPvC, setIsPvC] = useState(false); // ✅ 新增
+  const applyMove = (from: [number, number], to: [number, number]) => {
+    const result = makeMove(gameState, from[0], from[1], to[0], to[1]);
+    if (result.success) {
+      setGameState(result.newGameState);
+      setSelectedSquare(null);
+    }
+  };
+  // ✅ 新增：接入 AI hook（AI 固定下黑棋）
+  usePvC({
+    board: gameState.board,
+    currentTurn: gameState.currentTurn,
+    isPvC,
+    skillLevel: 10,
+    depth: 10,
+    onAIMove: applyMove,
+  });
+
   const handleSquarePress = (row: number, col: number) => {
+    if (isPvC && gameState.currentTurn === COLORS.BLACK) return;
+
     const pieceAtTarget = gameState.board[row][col];
 
     if (selectedSquare === null) {
@@ -37,11 +59,8 @@ export function PlayScreen() {
       return;
     }
 
-    const result = makeMove(gameState, selectedSquare.row, selectedSquare.col, row, col);
-    if (result.success) {
-      setGameState(result.newGameState);
-      setSelectedSquare(null);
-    }
+    applyMove([selectedSquare.row, selectedSquare.col], [row, col]);
+
   };
 
   const handleNewGame = () => {
@@ -52,6 +71,12 @@ export function PlayScreen() {
   const toggleLanguage = () => {
     const newLang = i18n.language === 'zh-TW' ? 'en' : 'zh-TW';
     i18n.changeLanguage(newLang);
+  };
+
+  const togglePvC = () => {
+    setIsPvC((v) => !v);
+    setGameState(initializeChessGame());
+    setSelectedSquare(null);
   };
 
   const toggleTutorialMode = () => {
@@ -97,6 +122,14 @@ export function PlayScreen() {
         <Text style={styles.newGameTopLeftText}>{t('app.newGame')}</Text>
       </TouchableOpacity>
       <View style={styles.topRightBar}>
+        <TouchableOpacity
+          style={[styles.tutorialButton, isPvC && styles.tutorialButtonOn]}
+          onPress={togglePvC}
+        >
+          <Text style={[styles.tutorialButtonText, isPvC && styles.tutorialButtonTextOn]}>
+            {isPvC ? '🤖 PvC' : '👥 PvP'}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tutorialButton, tutorialMode && styles.tutorialButtonOn]}
           onPress={toggleTutorialMode}

@@ -18,7 +18,8 @@
     "react": "19.1.0",
     "react-i18next": "^14.0.0",
     "react-native": "0.81.5",
-    "react-native-safe-area-context": "~5.6.2"
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-stockfish-chess-engine": "^0.1.5"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.22.0",
