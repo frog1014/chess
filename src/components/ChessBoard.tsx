@@ -5,6 +5,7 @@ import {
   getPieceUnicode,
   type Board,
   type BoardSquare,
+  type PieceColor,
 } from '../utils/chessLogic';
 
 
@@ -19,6 +20,7 @@ export interface SelectedSquare {
 }
 
 interface ChessBoardProps {
+  currentTurn: PieceColor;
   board: Board;
   selectedSquare: SelectedSquare | null;
   tutorialMode: boolean;
@@ -26,9 +28,10 @@ interface ChessBoardProps {
   onSquarePress: (row: number, col: number) => void;
 }
 
-export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = [], onSquarePress }: ChessBoardProps) {
+export function ChessBoard({ currentTurn, board, selectedSquare, tutorialMode, moveHistory = [], onSquarePress }: ChessBoardProps) {
   // 在你的組件內部
   const breatheAnim = useRef(new Animated.Value(0.4)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const renderPiece = (piece: BoardSquare) => {
     if (!piece) return '';
@@ -47,6 +50,11 @@ export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = 
   const isLegalTarget = (row: number, col: number) =>
     legalTargets.some((m) => m.row === row && m.col === col);
 
+  const isCurrentPlayerPiece = (piece: BoardSquare) => {
+    console.log('Checking piece color:', piece?.color, 'against current turn:', currentTurn);
+    return piece?.color === currentTurn
+  };
+
   const lastMove = moveHistory && moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
   const isLastMoveFrom = (row: number, col: number) => lastMove && lastMove.from[0] === row && lastMove.from[1] === col;
   const isLastMoveTo = (row: number, col: number) => lastMove && lastMove.to[0] === row && lastMove.to[1] === col;
@@ -60,6 +68,25 @@ export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = 
             const showLegal = isLegalTarget(rowIndex, colIndex);
             const isLastFrom = isLastMoveFrom(rowIndex, colIndex);
             const isLastTo = isLastMoveTo(rowIndex, colIndex);
+            // 初始化縮放值，從 1 (原始大小) 到 1.1 (放大 10%)
+
+            useEffect(() => {
+              // 啟動一個無限循環的縮放動畫
+              Animated.loop(
+                Animated.sequence([
+                  Animated.timing(scaleAnim, {
+                    toValue: 1.3,      // 放大
+                    duration: 1000,     // 縮放頻率通常比顏色呼吸快一點點更有節奏感
+                    useNativeDriver: true, // 縮放支援 Native Driver，效能更好
+                  }),
+                  Animated.timing(scaleAnim, {
+                    toValue: 1,        // 回到原始大小
+                    duration: 1000,
+                    useNativeDriver: true,
+                  }),
+                ])
+              ).start();
+            }, []);
 
             useEffect(() => {
               if (showLegal) {
@@ -82,6 +109,10 @@ export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = 
                 breatheAnim.setValue(0.4); // 若不是合法移動則重置
               }
             }, [showLegal]);
+
+
+
+            const showHistory = tutorialMode && (isLastFrom || isLastTo);
             return (
               <TouchableOpacity
                 key={`${rowIndex}-${colIndex}`}
@@ -91,7 +122,7 @@ export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = 
                   // 基礎底色
                   isLight ? styles.lightSquare : styles.darkSquare,
                   // 最後移動的底色 (會蓋在基礎底色上)
-                  (isLastFrom || isLastTo) && styles.lastMoveSquare,
+                  showHistory && styles.lastMoveSquare,
                   // 選中狀態的邊框/發光
                   isSelected && styles.selectedSquare,
                 ]}
@@ -110,13 +141,24 @@ export function ChessBoard({ board, selectedSquare, tutorialMode, moveHistory = 
 
                 {/* 第二層：內容容器 - zIndex 更高以確保文字在最上層 */}
                 <View style={[styles.contentContainer, { zIndex: 2 }]}>
-                  <Text style={styles.piece}>{renderPiece(piece)}</Text>
-                  {(isLastFrom || isLastTo) && (
+                  {/* 第三層：棋子本體 - 改為 Animated.Text */}
+                  <Animated.Text
+                    style={[
+                      styles.piece,
+                      // 判斷：如果是目前輪到的玩家棋子，則套用縮放動畫
+                      isCurrentPlayerPiece(piece) && {
+                        transform: [{ scale: scaleAnim }]
+                      }
+                    ]}
+                  >
+                    {renderPiece(piece)}
+                  </Animated.Text>
+
+                  {showHistory && (
                     <Text style={styles.moveNumber}>{isLastFrom ? '1' : '2'}</Text>
                   )}
                 </View>
               </TouchableOpacity>
-
             );
           })}
         </View>

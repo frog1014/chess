@@ -117,9 +117,7 @@ export function PlayScreen() {
       <View style={styles.upperContent}>
         <Text style={styles.title}>{t('app.title')}</Text>
         <View style={styles.turnInfo}>
-          <Text style={styles.turnText}>
-            {t('game.currentPlayer')}: {playerName}
-          </Text>
+
           <ScrollView
             style={[styles.metaScroll, tutorialMode && styles.instructionPanel]}
             contentContainerStyle={styles.metaScrollContent}
@@ -178,12 +176,16 @@ export function PlayScreen() {
               </Text>
             ) : null}
           </ScrollView>
+          <Text style={styles.turnText}>
+            {t('game.currentPlayer')}: {playerName}
+          </Text>
         </View>
       </View>
 
       <View style={styles.boardBottom}>
         <ChessBoard
           board={gameState.board}
+          currentTurn={gameState.currentTurn}
           selectedSquare={selectedSquare}
           tutorialMode={tutorialMode}
           moveHistory={gameState.moveHistory}
@@ -296,6 +298,7 @@ const styles = StyleSheet.create({
     color: '#b0bec5',
     textAlign: 'center',
     marginBottom: 6,
+    marginTop: 6,
   },
   metaScroll: {
     flex: 1,
