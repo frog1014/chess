@@ -56,7 +56,7 @@ export function PlayScreen() {
 
   const toggleTutorialMode = () => {
     setTutorialMode((v) => !v);
-    setSelectedSquare(null);
+    // setSelectedSquare(null);
   };
 
   const playerName = gameState.currentTurn === 'white' ? t('game.whitePiece') : t('game.blackPiece');
@@ -117,11 +117,9 @@ export function PlayScreen() {
       <View style={styles.upperContent}>
         <Text style={styles.title}>{t('app.title')}</Text>
         <View style={styles.turnInfo}>
-          <Text style={styles.turnText}>
-            {t('game.currentPlayer')}: {playerName}
-          </Text>
+
           <ScrollView
-            style={styles.metaScroll}
+            style={[styles.metaScroll, tutorialMode && styles.instructionPanel]}
             contentContainerStyle={styles.metaScrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator
@@ -178,14 +176,19 @@ export function PlayScreen() {
               </Text>
             ) : null}
           </ScrollView>
+          <Text style={styles.turnText}>
+            {t('game.currentPlayer')}: {playerName}
+          </Text>
         </View>
       </View>
 
       <View style={styles.boardBottom}>
         <ChessBoard
           board={gameState.board}
+          currentTurn={gameState.currentTurn}
           selectedSquare={selectedSquare}
           tutorialMode={tutorialMode}
+          moveHistory={gameState.moveHistory}
           onSquarePress={handleSquarePress}
         />
       </View>
@@ -196,7 +199,7 @@ export function PlayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#0E1E37',
     paddingTop: 24
   },
   upperContent: {
@@ -209,23 +212,29 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
     marginBottom: 12,
-    color: '#333',
+    color: '#E0E0E0',
     textAlign: 'center',
+    letterSpacing: 2,
   },
   newGameTopLeft: {
     position: 'absolute',
     top: 20,
     left: 16,
     zIndex: 2,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#4E9F3D',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
+    elevation: 15,
+    shadowColor: '#fff',
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
   },
   newGameTopLeftText: {
-    color: 'white',
+    color: '#f5f5f5',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -239,19 +248,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tutorialButton: {
-    backgroundColor: '#e0e0e0',
-    paddingHorizontal: 12,
+    backgroundColor: '#c8926b',
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#bdbdbd',
+    borderRadius: 8,
+    borderWidth: 0,
+    elevation: 8,
+    shadowColor: '#fff',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   tutorialButtonOn: {
-    backgroundColor: '#FF9800',
-    borderColor: '#F57C00',
+    backgroundColor: '#c8926b',
+    borderColor: '#a0714a',
   },
   tutorialButtonText: {
-    color: '#424242',
+    color: '#2d2d2d',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -259,13 +272,18 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   languageButton: {
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 12,
+    backgroundColor: '#9e9e9e',
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 8,
+    elevation: 8,
+    shadowColor: '#fff',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   languageButtonText: {
-    color: 'white',
+    color: '#2d2d2d',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -277,9 +295,10 @@ const styles = StyleSheet.create({
   },
   turnText: {
     fontSize: 16,
-    color: '#666',
+    color: '#b0bec5',
     textAlign: 'center',
     marginBottom: 6,
+    marginTop: 6,
   },
   metaScroll: {
     flex: 1,
@@ -297,7 +316,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 8,
     paddingBottom: 8,
-    backgroundColor: '#f2f2f2',
   },
   pieceTutorialBlock: {
     marginTop: 8,
@@ -306,13 +324,13 @@ const styles = StyleSheet.create({
   },
   pieceTutorialRules: {
     fontSize: 13,
-    color: '#1565C0',
+    color: '#64b5f6',
     lineHeight: 20,
     textAlign: 'center',
   },
   pieceTutorialSituation: {
     fontSize: 13,
-    color: '#0D47A1',
+    color: '#81c784',
     fontWeight: '600',
     lineHeight: 20,
     marginTop: 6,
@@ -320,7 +338,7 @@ const styles = StyleSheet.create({
   },
   selectedPieceText: {
     fontSize: 16,
-    color: '#333',
+    color: '#ffffff',
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -328,11 +346,142 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#b71c1c',
     marginTop: 8,
+    marginBottom: 8,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 8,
   },
   noMovesTitle: {
     fontWeight: '700',
+  },
+
+  // 1. 新遊戲按鈕 (維持基準)
+  newGameTopLeft: {
+    position: 'absolute',
+    top: 20,
+    left: 16,
+    zIndex: 2,
+    backgroundColor: '#3b556e',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderTopWidth: 2,
+    borderTopColor: '#5c7a96',
+    borderBottomWidth: 4,
+    borderBottomColor: '#1d2b38',
+    borderLeftWidth: 1,
+    borderLeftColor: '#4d6d8a',
+    borderRightWidth: 1,
+    borderRightColor: '#4d6d8a',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  newGameTopLeftText: {
+    color: '#F0F0F0',
+    fontSize: 15,
+    fontWeight: 'bold',
+    includeFontPadding: false, // 移除字體預設邊距
+    textAlignVertical: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  // 2. 教學按鈕 (固定寬高避免跳動)
+  tutorialButton: {
+    backgroundColor: '#6b4d3c',
+    borderRadius: 10,
+    minWidth: 80,               // 鎖定寬度
+    height: 46,                 // 鎖定高度
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: 2,
+    borderTopColor: '#967462',
+    borderBottomWidth: 4,
+    borderBottomColor: '#3d2b22',
+    borderLeftWidth: 1,
+    borderLeftColor: '#825e4a',
+    borderRightWidth: 1,
+    borderRightColor: '#825e4a',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  tutorialButtonOn: {
+    backgroundColor: '#8D6E63',
+    borderTopColor: '#D7CCC8',
+    borderBottomColor: '#5D4037',
+    borderLeftColor: '#A1887F',
+    borderRightColor: '#A1887F',
+    // 這裡不寫邊框寬度，它會自動沿用 tutorialButton 的數值
+  },
+  tutorialButtonText: {
+    color: '#F0F0F0',
+    fontSize: 15,
+    fontWeight: 'bold',
+    includeFontPadding: false, // 關鍵：防止 Android 字體換行/位移
+    textAlignVertical: 'center',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  // 3. 語言按鈕 (固定寬高避免切換跳動)
+  languageButton: {
+    backgroundColor: '#525252',
+    borderRadius: 10,
+    minWidth: 60,               // 鎖定寬度，足以容納 EN 與 繁中
+    height: 46,                 // 鎖定高度
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: 2,
+    borderTopColor: '#7a7a7a',
+    borderBottomWidth: 4,
+    borderBottomColor: '#2b2b2b',
+    borderLeftWidth: 1,
+    borderLeftColor: '#636363',
+    borderRightWidth: 1,
+    borderRightColor: '#636363',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  languageButtonText: {
+    color: '#F0F0F0',
+    fontSize: 15,
+    fontWeight: 'bold',
+    includeFontPadding: false, // 關鍵：解決切換語系時的高低落差
+    textAlignVertical: 'center',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  instructionPanel: {
+    width: '100%',
+    borderRadius: 12,
+    padding: 8,
+
+    // --- 關鍵：多層發光效果 ---
+    borderWidth: 1.8,
+    borderColor: 'rgba(255, 255, 255, 0.6)', // 亮淺藍邊框 (霓虹核心)
+
+    // 1. Android 的發光靠 elevation (但效果有限)
+    elevation: 100,
+
+    // 2. iOS 的強效發光 (陰影設為淡藍色)
+    shadowColor: '#87CEFA', // 天藍色發光
+    shadowOpacity: 0.8,     // 提高不透明度
+    shadowRadius: 12,       // 增加擴散範圍
+    shadowOffset: { width: 0, height: 0 }, // 均勻向四周發光
   },
 });
