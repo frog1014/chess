@@ -19,7 +19,8 @@ export function usePvC({
   useEffect(() => { onAIMoveRef.current = onAIMove; }, [onAIMove]);
 
   useEffect(() => {
-    initStockfish(skillLevel); // async，但不需要 await，背景初始化即可
+    console.log('[usePvC] useEffect init called'); // 確認 hook 有掛上去
+    initStockfish(skillLevel)
     return () => { stopStockfish(); };
   }, []);
 
@@ -27,7 +28,11 @@ export function usePvC({
     if (!isPvC || currentTurn !== COLORS.BLACK) return;
 
     const fen = boardToFen(board, currentTurn);
+    console.log('[usePvC] AI turn, FEN:', fen);
+
+    // ✅ requestAIMove 現在是 async
     requestAIMove(fen, depth, (move) => {
+      console.log('[usePvC] AI move:', move);
       onAIMoveRef.current(move.from, move.to);
     });
   }, [currentTurn, isPvC]);
