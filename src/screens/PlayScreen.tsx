@@ -123,7 +123,7 @@ export function PlayScreen() {
       </TouchableOpacity>
       <View style={styles.topRightBar}>
         <TouchableOpacity
-          style={[styles.tutorialButton, isPvC && styles.tutorialButtonOn]}
+          style={[styles.pvcButton, isPvC && styles.pvcButtonOn]}
           onPress={togglePvC}
         >
           <Text style={[styles.tutorialButtonText, isPvC && styles.tutorialButtonTextOn]}>
@@ -137,7 +137,7 @@ export function PlayScreen() {
           accessibilityState={{ checked: tutorialMode }}
         >
           <Text style={[styles.tutorialButtonText, tutorialMode && styles.tutorialButtonTextOn]}>
-            {t('app.tutorial')}
+            {t('app.tutorial')} {tutorialMode ? 'ON' : 'OFF'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.languageButton} onPress={toggleLanguage}>
@@ -451,6 +451,35 @@ const styles = StyleSheet.create({
     borderBottomColor: '#5D4037',
     borderLeftColor: '#A1887F',
     borderRightColor: '#A1887F',
+    // 這裡不寫邊框寬度，它會自動沿用 tutorialButton 的數值
+  },
+  pvcButton: {
+    backgroundColor: '#64acff',
+    borderRadius: 10,
+    minWidth: 80,               // 鎖定寬度
+    height: 46,                 // 鎖定高度
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: 2,
+    borderTopColor: '#e6f7ff',
+    borderBottomWidth: 4,
+    borderBottomColor: '#3b7dc9',
+    borderLeftWidth: 1,
+    borderLeftColor: '#809fc3',
+    borderRightWidth: 1,
+    borderRightColor: '#809fc3',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  pvcButtonOn: {
+    backgroundColor: '#8dbef6',
+    borderTopColor: '#e6f7ff',
+    borderBottomColor: '#6094d0',
+    borderLeftColor: '#8eb1da',
+    borderRightColor: '#8eb1da',
     // 這裡不寫邊框寬度，它會自動沿用 tutorialButton 的數值
   },
   tutorialButtonText: {
