@@ -11,6 +11,9 @@ import {
   makeMove,
   COLORS,
   type GameState,
+  getGameResult,
+  isInCheck,
+  type GameResult,
 } from '../utils/chessLogic';
 import { usePvC } from '../hooks/usePvC'; // ✅ 新增
 
@@ -27,7 +30,12 @@ export function PlayScreen() {
       setSelectedSquare(null);
     }
   };
+  const [gameResult, setGameResult] = useState<GameResult>({ status: 'playing' });
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    const result = getGameResult(gameState.board, gameState.currentTurn);
+    setGameResult(result);
+  }, [gameState]);
 
   // ✅ 新增：接入 AI hook（AI 固定下黑棋）
   usePvC({
@@ -50,6 +58,8 @@ export function PlayScreen() {
   }, [gameState.currentTurn]);
 
   const handleSquarePress = (row: number, col: number) => {
+    if (gameResult.status === 'checkmate' || gameResult.status === 'stalemate') return;
+
     if (isPvC && gameState.currentTurn === COLORS.BLACK) return;
 
     const pieceAtTarget = gameState.board[row][col];
@@ -78,6 +88,7 @@ export function PlayScreen() {
   const handleNewGame = () => {
     setGameState(initializeChessGame());
     setSelectedSquare(null);
+    setGameResult({ status: 'playing' });
   };
 
   const toggleLanguage = () => {
@@ -229,6 +240,34 @@ export function PlayScreen() {
               {String(elapsedSeconds % 60).padStart(2, '0')}
             </Text>
           </Text>
+          {/* 將軍提示 */}
+          {gameResult.status === 'check' && (
+            <Text style={styles.checkText}>
+              ⚠️ {t('game.check')}
+            </Text>
+          )}
+
+          {/* 將死 */}
+          {gameResult.status === 'checkmate' && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultText}>
+                🏆 {t('game.checkmate', {
+                  winner: gameResult.winner === 'white'
+                    ? t('game.whitePiece')
+                    : t('game.blackPiece')
+                })}
+              </Text>
+            </View>
+          )}
+
+          {/* 逼和 */}
+          {gameResult.status === 'stalemate' && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.resultText}>
+                🤝 {t('game.stalemate')}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -241,6 +280,9 @@ export function PlayScreen() {
           moveHistory={gameState.moveHistory}
           onSquarePress={handleSquarePress}
         />
+        {(gameResult.status === 'checkmate' || gameResult.status === 'stalemate') && (
+          <View style={styles.boardOverlay} />
+        )}
       </View>
     </View>
   );
@@ -569,5 +611,27 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'], // 數字等寬，避免跳動
     fontWeight: '600',
   },
-
+  checkText: {
+    fontSize: 18,
+    color: '#FF6B6B',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  resultContainer: {
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 8,
+  },
+  resultText: {
+    fontSize: 20,
+    color: '#FFD700',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  boardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 4,
+  },
 });

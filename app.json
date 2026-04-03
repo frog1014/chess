@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Chess",
-    "slug": "learn and improve while they play",
+    "slug": "learn-and-improve-while-they-play",
     "version": "0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -24,6 +24,11 @@
           "imageWidth": 128
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9826e012-9164-4a22-8a57-6bdf0dcb9bfc"
+      }
+    }
   }
 }
