@@ -53,7 +53,7 @@
         "orthogonal_only": "Right now all its legal destinations lie on ranks or files only—diagonal rays are blocked before any legal landing.",
         "diagonal_only": "Right now every legal destination is on a diagonal—straight ranks/files are blocked before any legal landing."
       },
-      "kingRules": "The king steps one square in any direction to an empty square or to capture an enemy. (This app does not yet enforce check or castling.)",
+      "kingRules": "The king steps one square in any direction to an empty square or to capture an enemy. It may not move into a square under attack. (Castling is not yet supported.)",
       "kingSituation": {
         "corner": "In a corner, fewer neighboring squares exist on the board.",
         "edge": "On the edge, fewer adjacent squares are on the board than in the center.",
