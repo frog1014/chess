@@ -13,7 +13,7 @@
       "**/*"
     ],
     "android": {
-      "package": "com.frog1014.chess"
+      "package": "com.lazyfrog.chess"
     },
     "plugins": [
       [
