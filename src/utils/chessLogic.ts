@@ -110,35 +110,34 @@ export function initializeChessGame(): GameState {
   };
 }
 
+function getRawMoves(board: Board, row: number, col: number): MoveCoord[] {
+  const piece = board[row][col];
+  if (!piece) return [];
+  switch (piece.type) {
+    case PIECE_TYPES.PAWN: return getPawnMoves(board, row, col, piece.color);
+    case PIECE_TYPES.ROOK: return getRookMoves(board, row, col, piece.color);
+    case PIECE_TYPES.KNIGHT: return getKnightMoves(board, row, col, piece.color);
+    case PIECE_TYPES.BISHOP: return getBishopMoves(board, row, col, piece.color);
+    case PIECE_TYPES.QUEEN: return getQueenMoves(board, row, col, piece.color);
+    case PIECE_TYPES.KING: return getKingMoves(board, row, col, piece.color);
+    default: return [];
+  }
+}
+
 // 獲取合法的移動
 function getLegalMoves(board: Board, row: number, col: number): MoveCoord[] {
   const piece = board[row][col];
   if (!piece) return [];
 
-  const moves: MoveCoord[] = [];
+  const rawMoves = getRawMoves(board, row, col);
 
-  switch (piece.type) {
-    case PIECE_TYPES.PAWN:
-      moves.push(...getPawnMoves(board, row, col, piece.color));
-      break;
-    case PIECE_TYPES.ROOK:
-      moves.push(...getRookMoves(board, row, col, piece.color));
-      break;
-    case PIECE_TYPES.KNIGHT:
-      moves.push(...getKnightMoves(board, row, col, piece.color));
-      break;
-    case PIECE_TYPES.BISHOP:
-      moves.push(...getBishopMoves(board, row, col, piece.color));
-      break;
-    case PIECE_TYPES.QUEEN:
-      moves.push(...getQueenMoves(board, row, col, piece.color));
-      break;
-    case PIECE_TYPES.KING:
-      moves.push(...getKingMoves(board, row, col, piece.color));
-      break;
-  }
-
-  return moves;
+  // 過濾掉走完後讓自己被將軍的走法
+  return rawMoves.filter(move => {
+    const newBoard: Board = board.map(r => [...r]);
+    newBoard[move.row][move.col] = piece;
+    newBoard[row][col] = null;
+    return !isInCheck(newBoard, piece.color);
+  });
 }
 
 /** 教學／提示：該格若有棋子，回傳目前盤勢下的所有合法走格（與 makeMove 使用的規則相同）。 */
@@ -472,4 +471,72 @@ export function boardToFen(board: Board, currentTurn: PieceColor): string {
 
   const turn = currentTurn === COLORS.WHITE ? 'w' : 'b';
   return `${rows.join('/')} ${turn} - - 0 1`;
+}
+
+// ✅ 加在 boardToFen 下方
+
+// 判斷某顏色的王是否被將軍
+export function isInCheck(board: Board, color: PieceColor): boolean {
+  let kingRow = -1;
+  let kingCol = -1;
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const sq = board[r][c];
+      if (sq?.type === PIECE_TYPES.KING && sq.color === color) {
+        kingRow = r; kingCol = c;
+      }
+    }
+  }
+  if (kingRow === -1) return false;
+
+  const opponent = color === COLORS.WHITE ? COLORS.BLACK : COLORS.WHITE;
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const sq = board[r][c];
+      if (sq?.color !== opponent) continue;
+      if (getRawMoves(board, r, c).some(m => m.row === kingRow && m.col === kingCol)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// 判斷某顏色是否有任何合法走法
+function hasAnyLegalMove(board: Board, color: PieceColor): boolean {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const sq = board[r][c];
+      if (sq?.color !== color) continue;
+      if (getLegalMoves(board, r, c).length > 0) return true;
+    }
+  }
+  return false;
+}
+
+export type GameResult =
+  | { status: 'playing' }
+  | { status: 'check'; color: PieceColor }          // 被將軍但還能走
+  | { status: 'checkmate'; winner: PieceColor }      // 將死
+  | { status: 'stalemate' };                         // 逼和
+
+export function getGameResult(board: Board, currentTurn: PieceColor): GameResult {
+  const inCheck = isInCheck(board, currentTurn);
+  const canMove = hasAnyLegalMove(board, currentTurn);
+
+  if (!canMove) {
+    if (inCheck) {
+      // 被將死，對方獲勝
+      const winner = currentTurn === COLORS.WHITE ? COLORS.BLACK : COLORS.WHITE;
+      return { status: 'checkmate', winner };
+    } else {
+      return { status: 'stalemate' };
+    }
+  }
+
+  if (inCheck) {
+    return { status: 'check', color: currentTurn };
+  }
+
+  return { status: 'playing' };
 }

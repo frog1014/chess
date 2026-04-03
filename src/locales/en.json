@@ -59,7 +59,10 @@
         "edge": "On the edge, fewer adjacent squares are on the board than in the center.",
         "inner": "In the center, up to eight neighbors can be considered if empty or capturable."
       }
-    }
+    },
+    "check": "Check!",
+    "checkmate": "{{winner}} wins! Checkmate!",
+    "stalemate": "Stalemate! It's a draw."
   },
   "common": {
     "language": "English"
